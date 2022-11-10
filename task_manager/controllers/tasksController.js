@@ -1,26 +1,65 @@
-const getAllTasks = (req, res)=>{
-    res.send('get all tasks')
-}
+const Task = require('../models/task')
+const asyncWrapper = require("../middleware/async.js")
 
-const addTask = (req,res)=>{
-    const body = req.body
-    res.send('add task')
-}
+const getAllTasks = asyncWrapper(async (req, res)=>{
+        const tasks = await Task.find()
+        res.status(200)
+        res.json({tasks})
 
-const getSingleTask = (req, res)=>{
-    const taskID = req.params.taskID
-    res.send('get single task')
-}
+})
 
-const editTask = (req, res)=>{
-    const taskID = req.params.taskID
-    res.send('edit task')
-}
+const addTask = asyncWrapper(async (req,res)=>{
+    const task = await Task.create(req.body)
+    res.status(201)
+    res.json({task})
+})
 
-const deleteTask = (req, res)=>{
-    const taskID = req.params.taskID
-    res.send('delete task')
-}
+const getSingleTask = asyncWrapper(async (req, res, next)=>{
+    const { taskID: taskID } = req.params
+    const task = await Task.findOne({_id:taskID})
+    if(!task){
+        const error = new Error('Task Not Found')
+        error.status = 404
+        return next(error)
+    }
+    else{
+        res.status(200)
+        res.json({task})
+    }
+})
+
+const editTask = asyncWrapper(async (req, res)=>{
+    const {taskID:taskID} = req.params
+    const task = await Task.findOneAndUpdate({_id:taskID}, req.body, {
+        new: true, 
+        runValidators: true
+    })
+    if(!task){
+        const error = new Error('Task Not Found')
+        error.status = 404
+        return next(error)
+    }
+    else{
+        res.status(200)
+        res.send({task})
+    }
+})
+
+const deleteTask = asyncWrapper( async (req, res)=>{
+    const {taskID: taskID} = req.params
+    const task = await Task.findOneAndDelete({_id:taskID}, {
+        useFindAndModify: false
+    })
+    if(!task){
+        const error = new Error('Task Not Found')
+        error.status = 404
+        return next(error)
+    }
+    else{
+        res.status(200)
+        res.json({task})
+    }
+})
 
 module.exports = {
     getAllTasks,

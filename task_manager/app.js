@@ -1,25 +1,22 @@
 const connectDB = require('./db/connect')
 const express = require('express')
 const taskRoutes = require('./routes/tasks')
+const notFound = require('./middleware/404')
+const errorHandler = require('./middleware/error')
 require('dotenv').config()
 
 
 
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 //middleware
 app.use(express.json())
 app.use(express.static('./public'))
 app.use('/api/v1/tasks', taskRoutes)
+app.use(notFound)
+app.use(errorHandler)
 
-/*
-app.get('/api/v1/tasks')
-app.post('/api/v1/tasks')
-app.get('/api/v1/tasks/:id')
-app.patch('/api/v1/tasks/:id')
-app.delete('/api/v1/tasks/:id')
-*/
 const start = async()=>{
     try{
         await connectDB(process.env.MONGODB_CONNECTION)
